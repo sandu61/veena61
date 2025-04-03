@@ -1,0 +1,48 @@
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+def get_movie_recommendations(movie_title, movies_df):
+    # Convert movie descriptions into TF-IDF feature vectors
+    tfidf = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf.fit_transform(movies_df['description'])
+    
+    # Compute cosine similarity between movies
+    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    
+    # Get the index of the given movie
+    idx = movies_df[movies_df['title'] == movie_title].index[0]
+    
+    # Get similarity scores for all movies with the given movie
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    
+    # Sort movies based on similarity scores
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    
+    # Get the top 5 similar movies (excluding the input movie itself)
+    sim_scores = sim_scores[1:6]
+    
+    # Get movie indices
+    movie_indices = [i[0] for i in sim_scores]
+    
+    # Return the top 5 recommended movie titles
+    return movies_df['title'].iloc[movie_indices]
+
+# Sample movie dataset
+movies_data = {
+    'title': ['Inception', 'Interstellar', 'The Matrix', 'Shutter Island', 'Memento'],
+    'description': [
+        "A thief who enters the dreams of others to steal their secrets.",
+        "A team of explorers travel through a wormhole in space.",
+        "A computer hacker learns about the true nature of reality.",
+        "A detective investigates a psychiatric facility on an isolated island.",
+        "A man suffering from short-term memory loss tries to track down his wife's killer."
+    ]
+}
+
+movies_df = pd.DataFrame(movies_data)
+
+# Example usage
+recommendations = get_movie_recommendations('Inception', movies_df)
+print("Recommended movies:")
+print(recommendations)
